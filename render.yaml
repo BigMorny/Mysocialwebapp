@@ -10,6 +10,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: 10000
 
   - type: web
     name: nmysocial-web
@@ -21,3 +25,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: NEXT_PUBLIC_API_BASE_URL
+        fromService:
+          name: nmysocial-api
+          type: web
+          property: url
