@@ -25,8 +25,7 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
+      # IMPORTANT: after first blueprint deploy, set this to your actual API service URL
+      # Example: https://nmysocial-api.onrender.com
       - key: NEXT_PUBLIC_API_BASE_URL
-        fromService:
-          name: nmysocial-api
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://REPLACE_ME_AFTER_DEPLOY
