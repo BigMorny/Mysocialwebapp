@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String    @default("Owner")
+  email          String?   @unique
+  phone          String?   @unique
+  passwordHash   String
+  verifiedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  isAdmin        Boolean   @default(false)
+  shop           Shop      @relation(fields: [shopId], references: [id])
+  shopId         String
+
+  sessions       Session[]
+  authorizedDevices AuthorizedDevice[]
+  decidedPaymentRequests SubscriptionPaymentRequest[] @relation("PaymentRequestDecidedBy")
+  inventoryItems InventoryItem[] @relation("CreatedItems")
+  dealers        Dealer[]        @relation("CreatedDealers")
+  consignments   Consignment[]   @relation("CreatedConsignments")
+  assignments    Assignment[]    @relation("AssignedBy")
+  sales          Sale[]          @relation("RecordedBy")
+  passwordResetTokens PasswordResetToken[]
+  adminAuditLogs   AdminAuditLog[]
+}
+
+model Shop {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  phone         String
+  locationNote  String?
+  createdAt     DateTime @default(now())
+
+  users         User[]
+  subscriptions Subscription[]
+  paymentRequests SubscriptionPaymentRequest[]
+  inventoryItems InventoryItem[]
+  dealers       Dealer[]
+  consignments  Consignment[]
+  notifications Notification[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+
+  @@index([userId, used, expiresAt])
+}
+
+model Session {
+  id             String    @id @default(cuid())
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+  device         AuthorizedDevice? @relation(fields: [deviceId], references: [id])
+  deviceId       String?
+  tokenHash      String
+  createdAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  revokedAt      DateTime?
+}
+
+model AuthorizedDevice {
+  id             String    @id @default(cuid())
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+  fingerprintHash String
+  label          String
+  lastSeenAt     DateTime  @default(now())
+  revokedAt      DateTime?
+
+  sessions       Session[]
+
+  @@unique([userId, fingerprintHash])
+}
+
+model Plan {
+  id               String   @id
+  name             String
+  maxLoginDevices  Int
+  exportCsv        Boolean  @default(false)
+  staffAccounts    Boolean  @default(false)
+  auditLog         Boolean  @default(false)
+  advancedReports  Boolean  @default(false)
+
+}
+
+model Subscription {
+  id           String             @id @default(cuid())
+  shop         Shop               @relation(fields: [shopId], references: [id])
+  shopId       String
+  status       SubscriptionStatus
+  trialEndsAt  DateTime?
+  billingCycle BillingCycle
+  amountGhs    Int
+  startedAt    DateTime
+  endsAt       DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@index([shopId, status])
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum PaymentMethod {
+  MOMO
+  BANK
+}
+
+enum PaymentRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model SubscriptionPaymentRequest {
+  id              String               @id @default(cuid())
+  shop            Shop                 @relation(fields: [shopId], references: [id])
+  shopId          String
+  billingCycle    BillingCycle
+  amountGhs       Int
+  method          PaymentMethod
+  reference       String
+  status          PaymentRequestStatus @default(PENDING)
+  note            String?
+  createdAt       DateTime             @default(now())
+  decidedAt       DateTime?
+  decidedByUser   User?                @relation("PaymentRequestDecidedBy", fields: [decidedByUserId], references: [id])
+  decidedByUserId String?
+
+  @@index([shopId, status])
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  channel   String
+  target    String
+  purpose   String
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  sendCount Int      @default(1)
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+
+  @@index([channel, target, purpose])
+}
+
+model InventoryItem {
+  id           String        @id @default(cuid())
+  name         String
+  category     String
+  brand        String        @default("")
+  model        String        @default("")
+  inventoryCategory InventoryCategory @default(PHONE)
+  imei1        String?
+  imei         String?
+  imei2        String?
+  serial       String?
+  storage      String?
+  ramGb        Int?
+  cpu          String?
+  screenInches Float?
+  gpu          String?
+  storageType  String?
+  storageGb    Int?
+  gadgetType   String?
+  color        String?
+  condition    String
+  costPrice    Int           @default(0)
+  sellingPrice Int           @default(0)
+  price        Decimal?
+  status       ItemStatus    @default(IN_SHOP)
+  soldAt       DateTime?
+  createdAt    DateTime      @default(now())
+  createdBy    User          @relation("CreatedItems", fields: [createdByUserId], references: [id])
+  createdByUserId String
+  shop         Shop          @relation(fields: [shopId], references: [id])
+  shopId       String
+
+  consignments Consignment[]
+  assignments  Assignment[]
+  sales        Sale[]
+
+  @@index([shopId])
+  @@index([shopId, status])
+  @@index([shopId, imei1])
+  @@index([shopId, imei])
+  @@unique([shopId, imei])
+  @@index([imei1])
+  @@index([imei2])
+  @@index([serial])
+}
+
+enum InventoryCategory {
+  PHONE
+  LAPTOP
+  GADGET
+}
+
+enum ItemStatus {
+  IN_SHOP
+  OUT_WITH_DEALER
+  SOLD
+}
+
+model Dealer {
+  id              String        @id @default(cuid())
+  createdBy       User?         @relation("CreatedDealers", fields: [createdByUserId], references: [id])
+  createdByUserId String?
+  shop            Shop          @relation(fields: [shopId], references: [id])
+  shopId          String
+  name            String
+  phone           String
+  locationNote    String?
+  idType          String?
+  idNumber        String?
+  createdAt       DateTime      @default(now())
+
+  consignments    Consignment[]
+  assignments     Assignment[]
+  sales           Sale[]
+
+  @@index([shopId])
+}
+
+model Consignment {
+  id               String             @id @default(cuid())
+  createdBy        User               @relation("CreatedConsignments", fields: [createdByUserId], references: [id])
+  createdByUserId  String
+  shop             Shop               @relation(fields: [shopId], references: [id])
+  shopId           String
+  inventoryItem    InventoryItem      @relation(fields: [inventoryItemId], references: [id])
+  inventoryItemId  String
+  dealer           Dealer             @relation(fields: [dealerId], references: [id])
+  dealerId         String
+  status           ConsignmentStatus  @default(OUT_WITH_DEALER)
+  handedOutAt      DateTime           @default(now())
+  expectedReturnAt DateTime?
+  closedAt         DateTime?
+  agreedPrice      Int?
+  soldPrice        Int?
+  notes            String?
+  createdAt        DateTime           @default(now())
+  notifications    Notification[]
+
+  @@index([shopId])
+  @@index([createdByUserId, status])
+  @@index([dealerId, status])
+  @@index([inventoryItemId, status])
+}
+
+enum ConsignmentStatus {
+  OUT_WITH_DEALER
+  SOLD
+  RETURNED
+  LOST
+}
+
+model Assignment {
+  id               String      @id @default(cuid())
+  item             InventoryItem @relation(fields: [itemId], references: [id])
+  itemId           String
+  dealer           Dealer     @relation(fields: [dealerId], references: [id])
+  dealerId         String
+  assignedBy       User       @relation("AssignedBy", fields: [assignedByUserId], references: [id])
+  assignedByUserId String
+  assignedAt       DateTime   @default(now())
+  status           AssignmentStatus
+  notes            String?
+
+  @@index([itemId, dealerId])
+}
+
+enum AssignmentStatus {
+  active
+  returned
+  sold
+}
+
+model Sale {
+  id                String        @id @default(cuid())
+  item              InventoryItem @relation(fields: [itemId], references: [id])
+  itemId            String
+  dealer            Dealer?       @relation(fields: [dealerId], references: [id])
+  dealerId          String?
+  amount            Int
+  soldAt            DateTime
+  recordedBy        User          @relation("RecordedBy", fields: [recordedByUserId], references: [id])
+  recordedByUserId  String
+
+  @@index([itemId])
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  shop          Shop             @relation(fields: [shopId], references: [id])
+  shopId        String
+  type          NotificationType
+  consignment   Consignment?     @relation(fields: [consignmentId], references: [id])
+  consignmentId String?
+  message       String
+  createdAt     DateTime         @default(now())
+  readAt        DateTime?
+
+  @@unique([type, consignmentId])
+  @@index([shopId, readAt])
+}
+
+enum NotificationType {
+  CONSIGNMENT_OVERDUE
+}
+
+model AdminAuditLog {
+  id          String               @id @default(cuid())
+  adminUser   User                 @relation(fields: [adminUserId], references: [id])
+  adminUserId String
+  action      String
+  targetType  AdminAuditTargetType
+  targetId    String
+  metaJson    Json?
+  createdAt   DateTime             @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+}
+
+enum AdminAuditTargetType {
+  SHOP
+  PAYMENT_REQUEST
+  SUPPORT
+}
+
+

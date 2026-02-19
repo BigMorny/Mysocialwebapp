@@ -1,0 +1,18 @@
+node_modules/
+.pnpm-store/
+dist/
+.next/
+coverage/
+*.log
+
+# Env files
+.env
+.env.*
+apps/api/.env
+apps/web/.env
+apps/web/.env.local
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/

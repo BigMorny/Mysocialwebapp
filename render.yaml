@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: nmysocial-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter api prisma generate && pnpm --filter api build
+    startCommand: corepack enable && pnpm --filter api prisma migrate deploy && pnpm --filter api start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+
+  - type: web
+    name: nmysocial-web
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter web build
+    startCommand: corepack enable && pnpm --filter web start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
