@@ -26,4 +26,7 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://nmysocial-api.onrender.com
+        fromService:
+          name: nmysocial-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
