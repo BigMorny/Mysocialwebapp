@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter api prisma generate && pnpm --filter api build
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter api prisma generate && pnpm --filter api build
     startCommand: corepack enable && pnpm --filter api prisma migrate deploy && pnpm --filter api start
     healthCheckPath: /api/health
     envVars:
