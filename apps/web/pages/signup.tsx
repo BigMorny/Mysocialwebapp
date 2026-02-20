@@ -6,6 +6,7 @@ import { AuthShell } from "../components/AuthShell";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Field";
+import { apiFetch } from "../lib/api";
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
@@ -40,10 +41,9 @@ const SignupPage: NextPage = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/signup`, {
+      const res = await apiFetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ ownerName, shopName, phone, email, password, location: location || null }),
       });
       const json = await res.json();

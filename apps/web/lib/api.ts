@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+const API_BASE_URL = "";
 const EXPIRED_KEY = "mysocial_session_expired_notified";
 
 export class ApiError extends Error {
@@ -31,7 +31,8 @@ export function clearSessionExpiredFlag() {
 }
 
 export async function apiFetch(path: string, init?: RequestInit, options?: ApiOptions) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     ...init,
     credentials: "include",
     headers: {

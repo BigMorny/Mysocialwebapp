@@ -6,6 +6,7 @@ import { AuthShell } from "../components/AuthShell";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Field";
+import { apiFetch } from "../lib/api";
 
 const ResetPasswordPage: NextPage = () => {
   const router = useRouter();
@@ -30,10 +31,9 @@ const ResetPasswordPage: NextPage = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password`, {
+      const res = await apiFetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ token, password }),
       });
       const json = await res.json();

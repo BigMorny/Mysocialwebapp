@@ -25,6 +25,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: API_PROXY_TARGET
+        value: https://nmysocial-api.onrender.com
       # IMPORTANT: after first blueprint deploy, set this to your actual API service URL
       # Example: https://nmysocial-api.onrender.com
       - key: NEXT_PUBLIC_API_BASE_URL

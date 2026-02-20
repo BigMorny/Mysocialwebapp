@@ -5,6 +5,7 @@ import { AuthShell } from "../components/AuthShell";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Field";
+import { apiFetch } from "../lib/api";
 
 const ForgotPasswordPage: NextPage = () => {
   const [email, setEmail] = useState("");
@@ -16,10 +17,9 @@ const ForgotPasswordPage: NextPage = () => {
     setMessage(null);
     setLoading(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/forgot-password`, {
+      await apiFetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ email }),
       });
       setMessage("If an account exists for this email, a reset link has been sent.");
