@@ -119,6 +119,10 @@ function statusCounts(items: InventoryItem[]) {
   };
 }
 
+function qtyFromCounts(counts: { inShop: number; withDealer: number }) {
+  return counts.inShop + counts.withDealer;
+}
+
 function categoryLabel(category: DeviceCategory) {
   if (category === "PHONE") return "Phone";
   if (category === "LAPTOP") return "Laptop";
@@ -599,8 +603,8 @@ function InventoryBody() {
           ) : null}
 
           {modelGroups.map((group) => {
-            const modelCount = group.items.length;
             const modelCounts = statusCounts(group.items);
+            const modelCount = qtyFromCounts(modelCounts);
             const modelOpen = Boolean(expandedModels[group.key]);
             return (
               <Card key={group.key}>
@@ -627,6 +631,7 @@ function InventoryBody() {
                   <div className="mt-3 space-y-2">
                     {group.variants.map((variant) => {
                       const variantCounts = statusCounts(variant.items);
+                      const variantQty = qtyFromCounts(variantCounts);
                       const variantGlobalKey = `${group.key}::${variant.key}`;
                       const variantOpen = Boolean(expandedVariants[variantGlobalKey]);
                       return (
@@ -641,7 +646,7 @@ function InventoryBody() {
                             <div className="min-w-0">
                               <p className="truncate text-base font-semibold">{variant.label}</p>
                               <div className="mt-1 flex items-center gap-2">
-                                <span className="text-2xl font-extrabold leading-none">{variant.items.length}</span>
+                                <span className="text-2xl font-extrabold leading-none">{variantQty}</span>
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${variant.condition === "NEW" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300"}`}>
                                   {variant.condition === "NEW" ? "New" : "Used"}
                                 </span>
