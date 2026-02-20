@@ -29,6 +29,7 @@ const LoginSchema = z.object({
 
 const ForgotPasswordSchema = z.object({ email: z.string().email() });
 const ResetPasswordSchema = z.object({ token: z.string().min(10), password: z.string().min(8).max(200) });
+const COOKIE_MAX_AGE = 5 * 60 * 60 * 1000;
 
 function shouldBeAdmin(user: { email: string | null; phone: string | null }) {
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
@@ -40,17 +41,19 @@ function shouldBeAdmin(user: { email: string | null; phone: string | null }) {
 
 const cookieOpts = {
   httpOnly: true,
-  sameSite: "none" as const,
   secure: true,
+  sameSite: "none" as const,
   path: "/",
-  maxAge: 5 * 60 * 60 * 1000,
+  domain: ".onrender.com",
+  maxAge: COOKIE_MAX_AGE,
 };
 
 const clearCookieOpts = {
   httpOnly: true,
-  sameSite: "none" as const,
   secure: true,
+  sameSite: "none" as const,
   path: "/",
+  domain: ".onrender.com",
 };
 
 function sessionCookieName() {
