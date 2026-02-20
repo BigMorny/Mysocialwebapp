@@ -27,7 +27,16 @@ type Summary = {
   user: { id: string; isAdmin: boolean };
   shop: { id: string; name: string; phone: string; locationNote?: string | null } | null;
   subscription: { status: string; trialEndsAt?: string | null; viewOnly?: boolean } | null;
-  counts: { inventory: number; dealers: number; consignments: number; overdueConsignments: number };
+  counts: {
+    inventory: number;
+    totalInventory?: number;
+    inShop?: number;
+    withDealer?: number;
+    sold?: number;
+    dealers: number;
+    consignments: number;
+    overdueConsignments: number;
+  };
   unreadNotifications: number;
 };
 

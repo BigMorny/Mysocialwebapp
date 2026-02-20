@@ -55,7 +55,7 @@ function DealersBody() {
     try {
       const [dealerRes, consRes] = await Promise.all([
         apiJson<Dealer[]>("/api/dealers"),
-        apiJson<Consignment[]>("/api/consignments"),
+        apiJson<Consignment[]>("/api/consignments?status=OUT_WITH_DEALER"),
       ]);
       setDealers(dealerRes);
       setConsignments(consRes);

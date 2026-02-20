@@ -35,6 +35,17 @@ router.post("/", requireAuth, async (req, res) => {
   ]);
   if (!item) return res.status(404).json({ ok: false, error: "Inventory item not found." });
   if (!dealer) return res.status(404).json({ ok: false, error: "Dealer not found." });
+  const existingActive = await prisma.consignment.findFirst({
+    where: {
+      shopId,
+      inventoryItemId,
+      status: "OUT_WITH_DEALER",
+    },
+    select: { id: true },
+  });
+  if (existingActive) {
+    return res.status(400).json({ ok: false, error: "Item already out with a dealer" });
+  }
   if (item.status === "SOLD" || item.status === "OUT_WITH_DEALER") {
     return res.status(409).json({ ok: false, error: "Item cannot be consigned in current status." });
   }

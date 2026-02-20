@@ -151,8 +151,8 @@ function DashboardBody() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Total Inventory</p><p className="mt-2 text-3xl font-bold">{summary?.counts.inventory ?? 0}</p></Card>
-        <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">With Dealer</p><p className="mt-2 text-3xl font-bold">{summary?.counts.consignments ?? 0}</p></Card>
+        <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Total Inventory</p><p className="mt-2 text-3xl font-bold">{summary?.counts.totalInventory ?? summary?.counts.inventory ?? 0}</p></Card>
+        <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">With Dealer</p><p className="mt-2 text-3xl font-bold">{summary?.counts.withDealer ?? summary?.counts.consignments ?? 0}</p></Card>
         <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Overdue</p><p className="mt-2 text-3xl font-bold text-rose-700 dark:text-rose-300">{summary?.counts.overdueConsignments ?? 0}</p></Card>
         <Card><p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Dealers</p><p className="mt-2 text-3xl font-bold">{summary?.counts.dealers ?? 0}</p></Card>
       </div>
