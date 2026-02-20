@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const pathParts = Array.isArray(req.query.path) ? req.query.path : [];
   const path = pathParts.join("/");
   const query = getQueryString(req);
-  const targetUrl = `${targetBase.replace(/\/+$/, "")}/${path}${query}`;
+  const targetUrl = `${targetBase.replace(/\/+$/, "")}/api/${path}${query}`;
 
   try {
     const method = req.method ?? "GET";
@@ -75,4 +75,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(502).json({ ok: false, error: "API proxy unreachable" });
   }
 }
-
