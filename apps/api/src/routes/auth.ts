@@ -30,6 +30,7 @@ const LoginSchema = z.object({
 const ForgotPasswordSchema = z.object({ email: z.string().email() });
 const ResetPasswordSchema = z.object({ token: z.string().min(10), password: z.string().min(8).max(200) });
 const COOKIE_MAX_AGE = 5 * 60 * 60 * 1000;
+const IS_PROD = process.env.NODE_ENV === "production";
 
 function shouldBeAdmin(user: { email: string | null; phone: string | null }) {
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
@@ -41,16 +42,16 @@ function shouldBeAdmin(user: { email: string | null; phone: string | null }) {
 
 const cookieOpts = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none" as const,
+  secure: IS_PROD,
+  sameSite: (IS_PROD ? "none" : "lax") as "none" | "lax",
   path: "/",
   maxAge: COOKIE_MAX_AGE,
 };
 
 const clearCookieOpts = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none" as const,
+  secure: IS_PROD,
+  sameSite: (IS_PROD ? "none" : "lax") as "none" | "lax",
   path: "/",
 };
 
@@ -107,6 +108,16 @@ async function createSessionAndSetCookie(req: express.Request, res: express.Resp
   });
 
   res.cookie(sessionCookieName(), token, cookieOpts);
+  if (process.env.DEBUG_AUTH === "true") {
+    // eslint-disable-next-line no-console
+    console.log("[DEBUG_AUTH] Set-Cookie options", {
+      cookieName: sessionCookieName(),
+      secure: cookieOpts.secure,
+      sameSite: cookieOpts.sameSite,
+      path: cookieOpts.path,
+      maxAge: cookieOpts.maxAge,
+    });
+  }
 }
 
 router.post("/request-otp", async (_req, res) => {
@@ -294,6 +305,25 @@ router.get("/me", requireAuth, async (req, res) => {
     user: { id: req.user!.id, name: req.user!.name, email: req.user!.email, phone: req.user!.phone, isAdmin: req.user!.isAdmin },
     shop,
     subscription: subscription ? { ...subscription, viewOnly: isViewOnly(subscription) } : null,
+  });
+});
+
+router.get("/debug-session", async (req, res) => {
+  if (process.env.DEBUG_AUTH !== "true") return fail(res, 404, "NOT_FOUND", "Not found.");
+  const cookieName = sessionCookieName();
+  const token = req.cookies?.[cookieName] as string | undefined;
+  return ok(res, {
+    cookieName,
+    hasCookie: Boolean(token),
+    cookieLength: token?.length ?? 0,
+    hasSessionOnRequest: Boolean(req.session?.id),
+    sessionId: req.session?.id ?? null,
+    hasUserOnRequest: Boolean(req.user?.id),
+    userId: req.user?.id ?? null,
+    origin: req.headers.origin ?? null,
+    host: req.headers.host ?? null,
+    forwardedProto: req.headers["x-forwarded-proto"] ?? null,
+    cookieHeaderPresent: Boolean(req.headers.cookie),
   });
 });
 

@@ -25,18 +25,19 @@ import { fail } from "./lib/http";
 
 export function createServer() {
   const app = express();
+  const webOrigin = process.env.WEB_ORIGIN || "http://localhost:3000";
+  const corsOptions = {
+    origin: webOrigin,
+    credentials: true,
+  };
 
   app.set("trust proxy", 1);
 
   app.use(helmet());
   app.use(morgan("combined"));
 
-  app.use(
-    cors({
-      origin: process.env.WEB_ORIGIN,
-      credentials: true,
-    }),
-  );
+  app.use(cors(corsOptions));
+  app.options("*", cors(corsOptions));
 
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
