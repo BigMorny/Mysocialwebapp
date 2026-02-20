@@ -38,24 +38,20 @@ function shouldBeAdmin(user: { email: string | null; phone: string | null }) {
   return Boolean(adminEmail && adminPhone && userEmail === adminEmail && userPhone === adminPhone);
 }
 
-function cookieOpts() {
-  return {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: false,
-    path: "/",
-    maxAge: 5 * 60 * 60 * 1000,
-  };
-}
+const cookieOpts = {
+  httpOnly: true,
+  sameSite: "none" as const,
+  secure: true,
+  path: "/",
+  maxAge: 5 * 60 * 60 * 1000,
+};
 
-function clearCookieOpts() {
-  return {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: false,
-    path: "/",
-  };
-}
+const clearCookieOpts = {
+  httpOnly: true,
+  sameSite: "none" as const,
+  secure: true,
+  path: "/",
+};
 
 function sessionCookieName() {
   return process.env.SESSION_COOKIE_NAME || "mysocial_session";
@@ -109,7 +105,7 @@ async function createSessionAndSetCookie(req: express.Request, res: express.Resp
     },
   });
 
-  res.cookie(sessionCookieName(), token, cookieOpts());
+  res.cookie(sessionCookieName(), token, cookieOpts);
 }
 
 router.post("/request-otp", async (_req, res) => {
@@ -280,7 +276,7 @@ router.post("/logout", async (req, res) => {
   const cookieName = sessionCookieName();
   const token = req.cookies?.[cookieName] as string | undefined;
   if (req.session?.id) clearAdminVerified(req.session.id);
-  res.clearCookie(cookieName, clearCookieOpts());
+  res.clearCookie(cookieName, clearCookieOpts);
   if (!token) return ok(res, { loggedOut: true }, 200);
 
   const tokenHash = sha256Hex(token);

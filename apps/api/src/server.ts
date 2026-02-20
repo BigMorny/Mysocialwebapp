@@ -25,7 +25,6 @@ import { fail } from "./lib/http";
 
 export function createServer() {
   const app = express();
-  const webOrigin = process.env.WEB_ORIGIN || "http://localhost:3000";
 
   app.set("trust proxy", 1);
 
@@ -34,7 +33,7 @@ export function createServer() {
 
   app.use(
     cors({
-      origin: webOrigin,
+      origin: process.env.WEB_ORIGIN,
       credentials: true,
     }),
   );

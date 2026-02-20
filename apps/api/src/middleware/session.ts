@@ -25,7 +25,12 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
 
   if (now - last > FIVE_HOURS_MS) {
     await prisma.session.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
-    res.clearCookie(COOKIE_NAME, { path: "/" });
+    res.clearCookie(COOKIE_NAME, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      path: "/",
+    });
     return fail(res, 401, "SESSION_EXPIRED", "Session expired due to inactivity.");
   }
 
@@ -36,8 +41,8 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
   // Keep cookie/session rolling with activity while preserving current auth flow.
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: "none",
+    secure: true,
     path: "/",
     maxAge: COOKIE_MAX_AGE,
   });
