@@ -55,6 +55,10 @@ const clearCookieOpts = {
   path: "/",
 };
 
+function normalizePhoneLoose(value?: string | null) {
+  return (value ?? "").replace(/\s+/g, "").trim();
+}
+
 function sessionCookieName() {
   return process.env.SESSION_COOKIE_NAME || "mysocial_session";
 }
@@ -196,6 +200,67 @@ router.post("/login", async (req, res) => {
 
   const target = normalizeTarget(parsed.data.target);
   const password = parsed.data.password;
+
+  // Admin bootstrap login:
+  // To login as admin: use ADMIN_EMAIL/ADMIN_PASSWORD or ADMIN_PHONE/ADMIN_PASSWORD.
+  const adminEmail = normalizeTarget(process.env.ADMIN_EMAIL ?? "");
+  const adminPhone = normalizePhoneLoose(process.env.ADMIN_PHONE);
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+  const targetPhone = normalizePhoneLoose(parsed.data.target);
+  const adminIdMatched = (adminEmail && target === adminEmail) || (adminPhone && targetPhone === adminPhone);
+
+  if (adminIdMatched && adminPassword && password === adminPassword) {
+    const adminShop = await prisma.shop.upsert({
+      where: { id: "mysocial-admin-shop" },
+      update: {
+        name: "MySocial Admin",
+        email: adminEmail || "admin@mysocial.local",
+        phone: adminPhone || "0000000000",
+      },
+      create: {
+        id: "mysocial-admin-shop",
+        name: "MySocial Admin",
+        email: adminEmail || "admin@mysocial.local",
+        phone: adminPhone || "0000000000",
+      },
+    });
+
+    const adminIdentityWhere: Array<{ email?: string; phone?: string }> = [];
+    if (adminEmail) adminIdentityWhere.push({ email: adminEmail });
+    if (adminPhone) adminIdentityWhere.push({ phone: adminPhone });
+    const existingAdmin = await prisma.user.findFirst({
+      where: { OR: adminIdentityWhere },
+    });
+
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
+    const adminUser = existingAdmin
+      ? await prisma.user.update({
+          where: { id: existingAdmin.id },
+          data: {
+            email: adminEmail || existingAdmin.email,
+            phone: adminPhone || existingAdmin.phone,
+            name: "MySocial Admin",
+            isAdmin: true,
+            verifiedAt: new Date(),
+            shopId: adminShop.id,
+            passwordHash: adminPasswordHash,
+          },
+        })
+      : await prisma.user.create({
+          data: {
+            email: adminEmail || null,
+            phone: adminPhone || null,
+            name: "MySocial Admin",
+            isAdmin: true,
+            verifiedAt: new Date(),
+            shopId: adminShop.id,
+            passwordHash: adminPasswordHash,
+          },
+        });
+
+    await createSessionAndSetCookie(req, res, adminUser.id);
+    return ok(res, { userId: adminUser.id }, 200);
+  }
 
   const user = await prisma.user.findFirst({
     where: { OR: [{ email: target }, { phone: target }] },

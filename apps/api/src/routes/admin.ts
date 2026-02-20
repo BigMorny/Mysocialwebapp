@@ -82,6 +82,10 @@ router.get("/verification-status", requireAuth, requireAdmin, async (req, res) =
   return ok(res, { verified: Boolean(req.session?.id && isAdminVerified(req.session.id)) });
 });
 
+router.get("/me", requireAuth, requireAdmin, async (req, res) => {
+  return ok(res, { isAdmin: true, userId: req.user!.id });
+});
+
 router.post("/verify-password", requireAuth, requireAdmin, async (req, res) => {
   const parsed = z.object({ password: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ ok: false, error: "Invalid body." });
