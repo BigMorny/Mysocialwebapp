@@ -30,7 +30,6 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
       secure: true,
       sameSite: "none",
       path: "/",
-      domain: ".onrender.com",
     });
     return fail(res, 401, "SESSION_EXPIRED", "Session expired due to inactivity.");
   }
@@ -45,7 +44,6 @@ export async function sessionMiddleware(req: Request, res: Response, next: NextF
     secure: true,
     sameSite: "none",
     path: "/",
-    domain: ".onrender.com",
     maxAge: COOKIE_MAX_AGE,
   });
 

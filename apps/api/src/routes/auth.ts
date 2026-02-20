@@ -44,7 +44,6 @@ const cookieOpts = {
   secure: true,
   sameSite: "none" as const,
   path: "/",
-  domain: ".onrender.com",
   maxAge: COOKIE_MAX_AGE,
 };
 
@@ -53,7 +52,6 @@ const clearCookieOpts = {
   secure: true,
   sameSite: "none" as const,
   path: "/",
-  domain: ".onrender.com",
 };
 
 function sessionCookieName() {
